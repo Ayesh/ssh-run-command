@@ -1,0 +1,50 @@
+name: Run remote SSH command
+description: Connect to a server over SSH, and run a command
+inputs:
+  ssh_key:
+    default: ''
+    required: true
+    description: >
+      SSH private key
+  ssh_host:
+    description: >
+      SSH host to connect
+  ssh_port:
+    default: '22'
+    required: false
+    description: >
+      SSH port to connect (defaults to 22)
+  ssh_username:
+    default: 'root'
+    required: false
+    description: >
+      SSH username to use (defaults to root)
+  command_cwd:
+    default: '.'
+    required: false
+    description: >
+      Working directory to change to, before running the command
+  command:
+    required: true
+    description: >
+      Command to run after connecting to the server over SSH
+
+outputs:
+  stdout:
+    description: "Command stdout"
+    value: ${{ steps.run.outputs.stdout }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup SSH key
+      shell: bash
+      run: |
+        install -m 600 -D /dev/null /tmp/ssh_key
+        echo "${{ inputs.ssh_key }}" > /tmp/ssh_key
+
+    - name: Connect and run command
+      shell: bash
+      run: |
+        set -o pipefail
+        echo "cd ${{ inputs.command_cwd }} && ${{ inputs.command }} && exit" | ssh ${{ inputs.ssh_username }}@${{ inputs.ssh_host }} -p ${{ inputs.ssh_port }} -o StrictHostKeyChecking=accept-new -i /tmp/ssh_key
