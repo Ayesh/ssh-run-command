@@ -45,7 +45,7 @@ runs:
       shell: bash
       run: |
         set -o pipefail
-        echo "cd ${{ inputs.command_cwd }} && ${{ inputs.command }} && exit" | ssh ${{ inputs.ssh_username }}@${{ inputs.ssh_host }} -p ${{ inputs.ssh_port }} -o StrictHostKeyChecking=accept-new -i /tmp/ssh_key | tee /tmp/cmd_output
+        echo "cd ${{ inputs.command_cwd }} && ${{ inputs.command }} && exit" | ssh ${{ inputs.ssh_username }}@${{ inputs.ssh_host }} -p ${{ inputs.ssh_port }} -o StrictHostKeyChecking=accept-new -i /tmp/ssh_key -o LogLevel=ERROR | tee /tmp/cmd_output
         exit_code=$?
         echo $exit_code > /tmp/cmd_exit_code
 
