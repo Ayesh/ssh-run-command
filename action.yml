@@ -30,9 +30,12 @@ inputs:
       Command to run after connecting to the server over SSH
 
 outputs:
-  stdout:
-    description: "Command stdout"
-    value: ${{ steps.run.outputs.stdout }}
+  output:
+    description: "Command output"
+    value: ${{ steps.output.outputs.stdout }}
+  exit_code:
+    description: "Command exit code"
+    value: ${{ steps.output.outputs.exit_code }}
 
 runs:
   using: composite
@@ -47,4 +50,10 @@ runs:
       shell: bash
       run: |
         set -o pipefail
-        echo "cd ${{ inputs.command_cwd }} && ${{ inputs.command }} && exit" | ssh ${{ inputs.ssh_username }}@${{ inputs.ssh_host }} -p ${{ inputs.ssh_port }} -o StrictHostKeyChecking=accept-new -i /tmp/ssh_key
+        echo "cd ${{ inputs.command_cwd }} && ${{ inputs.command }} && exit" | ssh ${{ inputs.ssh_username }}@${{ inputs.ssh_host }} -p ${{ inputs.ssh_port }} -o StrictHostKeyChecking=accept-new -i /tmp/ssh_key | tee /tmp/cmd_stdout; echo -n $? > /tmp/cmd_exit_code
+        
+    - name: Set outputs
+      shell: bash
+      id: output
+      run: |
+        echo "exit_code=$(< /tmp/cmd_exit_code)" >> $GITHUB_OUTPUT
