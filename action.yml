@@ -4,30 +4,24 @@ inputs:
   ssh_key:
     default: ''
     required: true
-    description: >
-      SSH private key
+    description: "SSH private key"
   ssh_host:
-    description: >
-      SSH host to connect
+    description: "SSH host to connect"
   ssh_port:
     default: '22'
     required: false
-    description: >
-      SSH port to connect (defaults to 22)
+    description: "SSH port to connect (defaults to 22)"
   ssh_username:
     default: 'root'
     required: false
-    description: >
-      SSH username to use (defaults to root)
+    description: "SSH username to use (defaults to root)"
   command_cwd:
     default: '.'
     required: false
-    description: >
-      Working directory to change to, before running the command
+    description: "Working directory to change to, before running the command"
   command:
     required: true
-    description: >
-      Command to run after connecting to the server over SSH
+    description: "Command to run after connecting to the server over SSH"
 
 outputs:
   output:
@@ -51,7 +45,6 @@ runs:
       shell: bash
       run: |
         set -o pipefail
-        # Run the SSH command and capture output and exit code
         echo "cd ${{ inputs.command_cwd }} && ${{ inputs.command }} && exit" | ssh ${{ inputs.ssh_username }}@${{ inputs.ssh_host }} -p ${{ inputs.ssh_port }} -o StrictHostKeyChecking=accept-new -i /tmp/ssh_key | tee /tmp/cmd_output
         exit_code=$?
         echo $exit_code > /tmp/cmd_exit_code
