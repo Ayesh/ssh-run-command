@@ -32,7 +32,7 @@ inputs:
 outputs:
   output:
     description: "Command output"
-    value: ${{ steps.output.outputs.stdout }}
+    value: ${{ steps.output.outputs.output }}
   exit_code:
     description: "Command exit code"
     value: ${{ steps.output.outputs.exit_code }}
@@ -47,13 +47,21 @@ runs:
         echo "${{ inputs.ssh_key }}" > /tmp/ssh_key
 
     - name: Connect and run command
+      id: ssh_command
       shell: bash
       run: |
         set -o pipefail
-        echo "cd ${{ inputs.command_cwd }} && ${{ inputs.command }} && exit" | ssh ${{ inputs.ssh_username }}@${{ inputs.ssh_host }} -p ${{ inputs.ssh_port }} -o StrictHostKeyChecking=accept-new -i /tmp/ssh_key | tee /tmp/cmd_stdout; echo -n $? > /tmp/cmd_exit_code
-        
+        # Run the SSH command and capture output and exit code
+        echo "cd ${{ inputs.command_cwd }} && ${{ inputs.command }} && exit" | ssh ${{ inputs.ssh_username }}@${{ inputs.ssh_host }} -p ${{ inputs.ssh_port }} -o StrictHostKeyChecking=accept-new -i /tmp/ssh_key | tee /tmp/cmd_output
+        exit_code=$?
+        echo $exit_code > /tmp/cmd_exit_code
+
     - name: Set outputs
-      shell: bash
       id: output
+      shell: bash
       run: |
+        output=$(< /tmp/cmd_output)
+        echo "output<<EOF" >> $GITHUB_OUTPUT
+        echo "$output" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
         echo "exit_code=$(< /tmp/cmd_exit_code)" >> $GITHUB_OUTPUT
